@@ -43,3 +43,6 @@ To read your logs, use:
     const logs = getLogs(false, 'info');
 
 You can load the logs anyhow you please or you could just download the logs 😉
+
+![Screenshot 2023-06-19 at 12 19 54 PM](https://github.com/cheese-framework/f-log/assets/54779057/982daef1-8dd1-43e2-806d-4b7e2b96834c)
+
