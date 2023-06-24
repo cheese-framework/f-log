@@ -5,27 +5,28 @@ F-Log is a versatile npm package designed to simplify file logging in your Node.
 # Install
 
 Install f-log using:
-
+```bash
     npm i @drantaz/f-log
+```    
 #
 ## How to use
 
 To create a single log, use:
-
+```ts
     import { log } from '@drantaz/f-log'
 
     log('Hello World, 'info');
     // This would print 'Hello World' to the console in a blue color and also log it to a
     file 'logs.log'
-
+```
 The third parameter is optional and only needed when you want to expressively tell `f-log` not to persist the log to the file. Example:
-
+```ts
     log('Do not save to file','success', false);
     // This would print the text 'Do not save to file' in a green color to the console
     but won't save it to the logs.log file.
-
+```ts
 To log multiple texts at once you can use the logAll function:
-
+```ts
     import { logAll } from  '@drantaz/f-log'
 
     logAll('info', true, 'Log 1', 'Log 2', 'Log 3', ...); // This will log each texts and save
@@ -33,9 +34,9 @@ To log multiple texts at once you can use the logAll function:
 
     logAll('info', false, 'Log 1', 'Log 2', 'Log 3', ...); // This will log each texts but won't
      save them in the logs.log file.
-
+```
 To read your logs, use:
-
+```ts
     import { getLogs } from  '@drantaz/f-log'
 
     # Get all logs without grouping
@@ -49,7 +50,7 @@ To read your logs, use:
 
     # Get by title with grouping
     const logs = getLogs(true, 'info');
-
+```
 You can load the logs anyhow you please or you could just download the logs 😉
 #
 
@@ -58,14 +59,14 @@ You can load the logs anyhow you please or you could just download the logs 😉
 To override the configuration of `@drantaz/f-log`, create a file called `f-log.json` at the root of your project.
 
 Override the _`path`_ to where you want to save your log files. For example, I'm saving mine inside the `src` folder to a folder called `logs`.
-
+```json
     { 
         "path": "src/logs"
     }
-
+```
 To change the filename or extension, use the following configuration:
 
-```
+```json
 {  
     "filename": "debug-logs",
     "extension": "txt"
@@ -96,13 +97,12 @@ To change the filename or extension, use the following configuration:
 
 For example, the status `success` uses `green` as its color. You can choose to override that or add your defined status by adding more configurations to the `f-log.json` file. Here's how:
 
-````
+````json
 {
     "status": [
         { "title": "success", "color": "cyan" },
         { "title": "debug", "color": "magenta" }
     ]
-    ...
 }
 ````
 Not only did I override the predefined color for `success` from `green` to `cyan`, I also introduced a new status, `debug` with the color `magenta`. You can add as much statuses as your want or override the colors of the predefined statuses.
