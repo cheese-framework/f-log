@@ -65,7 +65,7 @@ Override the _`path`_ to where you want to save your log files. For example, I'm
 
 To change the filename or extension, use the following configuration:
 
-```
+```json
 {  
     "filename": "debug-logs",
     "extension": "txt"
@@ -96,7 +96,7 @@ To change the filename or extension, use the following configuration:
 
 For example, the status `success` uses `green` as its color. You can choose to override that or add your defined status by adding more configurations to the `f-log.json` file. Here's how:
 
-````
+````json
 {
     "status": [
         { "title": "success", "color": "cyan" },
