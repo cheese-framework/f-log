@@ -45,11 +45,7 @@ let defaultStatus: Array<StatusType> = [
 ];
 let logFilePath = defaultLogFilePath;
 
-console.log(defaultStatus);
-
 init();
-
-console.log(defaultStatus);
 
 export const log = async (
   message: string,
