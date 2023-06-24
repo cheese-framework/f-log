@@ -14,7 +14,7 @@ To create a single log, use:
 
     import { log } from '@drantaz/f-log'
 
-    log('Hello World, 'info', true);
+    log('Hello World, 'info');
     // This would print 'Hello World' to the console in a blue color and also log it to a
     file 'logs.log'
 
@@ -37,20 +37,51 @@ To log multiple texts at once you can use the logAll function:
 To read your logs, use:
 
     import { getLogs } from  '@drantaz/f-log'
-    # Get all logs
-    const logs = getLogs(false, "");
-    # Get by title
+
+    # Get all logs without grouping
+    const logs = getLogs(false);
+
+    # Get all logs with grouping
+    const logs = getLogs();
+
+    # Get by title without grouping
     const logs = getLogs(false, 'info');
+
+    # Get by title with grouping
+    const logs = getLogs(true, 'info');
 
 You can load the logs anyhow you please or you could just download the logs 😉
 
-### Log types
+
+## Configurations:
+
+To override the configuration of `@drantaz/f-log`, create a file called `f-log.json` at the root of your project.
+
+Override the path to where you want to save your log files. For example, I'm saving mine inside the `src` folder to a folder called `logs`.
+
+    { 
+        "path": "./src/logs"
+    }
+
+More configuration options would be coming up with newer releases of `@drantaz/f-log`
+
+
+## Log types
 
 | **status** | **color** |
+
 | info | blue |
+
 | success | green |
+
 | warn | orange |
+
 | error | red |
+
 | critical | darkred |
+
+
+
+
 
 ![Screenshot 2023-06-19 at 12 19 54 PM](https://github.com/cheese-framework/f-log/assets/54779057/982daef1-8dd1-43e2-806d-4b7e2b96834c)
