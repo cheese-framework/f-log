@@ -1,3 +1,6 @@
 {
-  "path": "./src/logs"
+  "path": "src/dev/logs",
+  "filename": "debug-logs",
+  "extension": "log",
+  "status": [{ "title": "debug", "color": "magenta" }]
 }
