@@ -96,7 +96,7 @@ To change the filename or extension, use the following configuration:
 
 For example, the status `success` uses `green` as its color. You can choose to override that or add your defined status by adding more configurations to the `f-log.json` file. Here's how:
 
-````json
+````js
 {
     "status": [
         { "title": "success", "color": "cyan" },
