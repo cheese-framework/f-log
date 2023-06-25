@@ -48,18 +48,23 @@ let logFilePath = defaultLogFilePath;
 init();
 
 export const log = async (
-  message: string,
+  message: any,
   title: "info" | "success" | "error" | "warn" | "critical" | string = "info",
   persist: boolean = true
 ) => {
   try {
     const id = uuidv4();
-    const logMessage = `${id} ${title} ${message} ${new Date().toISOString()}${EOL}`;
+    const msg =
+      typeof message !== "string" || !isJSON(message)
+        ? JSON.stringify(message)
+        : message;
+    const logMessage = `${id} ${title} ${msg} ${new Date().toISOString()}${EOL}`;
     console.log(
       `${getColorCode(title)}[${title.toUpperCase()}] ${moment().format(
         "HH:mm:ss"
       )}`,
-      message
+      msg,
+      `${colors["reset"]}`
     );
     if (persist) {
       await fs.promises.appendFile(logFilePath, logMessage, {
@@ -69,7 +74,8 @@ export const log = async (
   } catch (err: any) {
     console.log(
       `${getColorCode("error")}[LOG-ERROR] ${moment().format("HH:mm:ss")}`,
-      `Error writing to log.json config file: ${err.message}`
+      `Error writing to log.json config file: ${err.message}`,
+      `${colors["reset"]}`
     );
     throw new Error(`Error writing to ${logFilePath}: ${err.message}`);
   }
@@ -78,7 +84,7 @@ export const log = async (
 export const logAll = (
   title: "info" | "success" | "warn" | "error" | "critical" | string = "info",
   persist: boolean,
-  ...messages: Array<string>
+  ...messages: Array<any>
 ) => {
   messages.forEach((message) => log(message, title, persist));
 };
@@ -95,7 +101,8 @@ export const getLogs = (group: boolean = true, status?: string): object => {
   if (logs.length && logs[0].trim().length) {
     for (const log of logs) {
       const [id, title, ...data] = log.split(" ");
-      const message = data.slice(0, -1).join(" ");
+      let message = data.slice(0, -1).join(" ");
+      message = isJSON(message) ? JSON.parse(message) : message;
       const time = data[data.length - 1];
 
       if (group) {
@@ -143,7 +150,8 @@ function init() {
       `${getColorCode("info")}[CONFIG-FILE-LOAD] ${moment().format(
         "HH:mm:ss"
       )}`,
-      "Loaded f-log.json config file"
+      "Loaded f-log.json config file",
+      `${colors["reset"]}`
     );
     try {
       const configData = fs.readFileSync(configFilePath, { encoding: "utf8" });
@@ -192,9 +200,19 @@ function init() {
         `${getColorCode("error")}[CONFIG-FILE-PARSE-ERROR] ${moment().format(
           "HH:mm:ss"
         )}`,
-        `Error reading f-log.json config file: ${err.message}`
+        `Error reading f-log.json config file: ${err.message}`,
+        `${colors["reset"]}`
       );
       throw new Error(`Error reading f-log.json config file: ${err.message}`);
     }
+  }
+}
+
+function isJSON(str: string) {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch (error) {
+    return false;
   }
 }
