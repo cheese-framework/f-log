@@ -16,24 +16,28 @@ To create a single log, use:
     import { log } from '@drantaz/f-log'
 
     log('Hello World, 'info');
-    // This would print 'Hello World' to the console in a blue color and also log it to a
-    file 'logs.log'
+    // This would print 'Hello World' to the console in a 
+    // blue color and also log it to a
+    // file 'logs.log'
 ```
 The third parameter is optional and only needed when you want to expressively tell `f-log` not to persist the log to the file. Example:
 ```ts
     log('Do not save to file','success', false);
-    // This would print the text 'Do not save to file' in a green color to the console
-    but won't save it to the logs.log file.
-```ts
+    // This would print the text 'Do not save to file' 
+    // in a green color to the console
+    // but won't save it to the logs.log file.
+```
 To log multiple texts at once you can use the logAll function:
 ```ts
     import { logAll } from  '@drantaz/f-log'
 
-    logAll('info', true, 'Log 1', 'Log 2', 'Log 3', ...); // This will log each texts and save
-    them in the logs.log file.
+    logAll('info', true, 'Log 1', 'Log 2', 'Log 3', ...); 
+    // This will log each texts and save
+    // them in the logs.log file.
 
-    logAll('info', false, 'Log 1', 'Log 2', 'Log 3', ...); // This will log each texts but won't
-     save them in the logs.log file.
+    logAll('info', false, 'Log 1', 'Log 2', 'Log 3', ...); 
+    // This will log each texts but won't
+    // save them in the logs.log file.
 ```
 To read your logs, use:
 ```ts
