@@ -13,12 +13,14 @@ Install f-log using:
 
 To create a single log, use:
 ```ts
-    import { log } from '@drantaz/f-log'
+    import { log } from '@drantaz/f-log';
 
     log('Hello World, 'info');
-    // This would print 'Hello World' to the console in a 
+
+    // This would print "Hello World" to 
+    // the console in a 
     // blue color and also log it to a
-    // file 'logs.log'
+    // file "logs.log"
 ```
 The third parameter is optional and only needed when you want to expressively tell `f-log` not to persist the log to the file. Example:
 ```ts
