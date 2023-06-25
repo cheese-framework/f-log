@@ -3,27 +3,10 @@ import path from "path";
 import moment from "moment";
 import { v4 as uuidv4 } from "uuid";
 import { EOL } from "os";
-import { StatusType } from "./types";
+import { LogStatus, StatusType } from "./types";
+import { colors, defaultStatuses } from "./misc";
 
-const colors: { [key: string]: string } = {
-  black: "\x1B[30m",
-  red: "\x1B[31m",
-  green: "\x1B[32m",
-  yellow: "\x1B[33m",
-  blue: "\x1B[34m",
-  magenta: "\x1B[35m",
-  cyan: "\x1B[36m",
-  white: "\x1B[37m",
-  gray: "\x1B[90m",
-  brightRed: "\x1B[91m",
-  brightGreen: "\x1B[92m",
-  brightYellow: "\x1B[93m",
-  brightBlue: "\x1B[94m",
-  brightMagenta: "\x1B[95m",
-  brightCyan: "\x1B[96m",
-  brightWhite: "\x1B[97m",
-  reset: "\x1B[0m",
-};
+let defaultStatus: Array<StatusType> = defaultStatuses;
 
 const getColorCode = (title: string) => {
   const status = defaultStatus.find((status) => status.title === title) ?? {
@@ -36,45 +19,58 @@ const getColorCode = (title: string) => {
 
 const defaultLogFilePath = path.join(process.cwd(), "logs.log");
 const configFilePath = path.join(process.cwd(), "f-log.json");
-let defaultStatus: Array<StatusType> = [
-  { title: "info", color: "blue" },
-  { title: "success", color: "green" },
-  { title: "warn", color: "yellow" },
-  { title: "critical", color: "brightRed" },
-  { title: "error", color: "red" },
-];
 let logFilePath = defaultLogFilePath;
+let logFormat = "plain";
+let enableConsole = true;
 
 init();
 
 export const log = async (
   message: any,
-  title: "info" | "success" | "error" | "warn" | "critical" | string = "info",
+  title: LogStatus = "info",
   persist: boolean = true
 ) => {
   try {
     const id = uuidv4();
     const msg =
-      typeof message !== "string" || !isJSON(message)
+      typeof message !== "string" || isJSON(message)
         ? JSON.stringify(message)
         : message;
-    const logMessage = `${id} ${title} ${msg} ${new Date().toISOString()}${EOL}`;
-    console.log(
-      `${getColorCode(title)}[${title.toUpperCase()}] ${moment().format(
-        "HH:mm:ss"
-      )}`,
-      msg,
-      `${colors["reset"]}`
-    );
+    const timestamp = new Date().toISOString();
+    const logMessage = `${id} ${title} ${msg} ${timestamp}${EOL}`;
+    if (enableConsole) {
+      console.log(
+        `${getColorCode(title)}[${title.toUpperCase()}] ${moment().format(
+          "HH:mm:ss"
+        )}`,
+        msg,
+        `${colors["reset"]}`
+      );
+    }
     if (persist) {
-      await fs.promises.appendFile(logFilePath, logMessage, {
-        encoding: "utf8",
-      });
+      if (logFormat === "json") {
+        const logEntry = {
+          message,
+          id,
+          level: title,
+          timestamp,
+        };
+        const logFileContent = fs.readFileSync(logFilePath, "utf8");
+        const logData = isJSON(logFileContent)
+          ? JSON.parse(logFileContent)
+          : [];
+        logData.push(logEntry);
+        fs.writeFileSync(logFilePath, JSON.stringify(logData, null, 2));
+      } else {
+        await fs.promises.appendFile(logFilePath, logMessage, {
+          encoding: "utf8",
+        });
+      }
     }
   } catch (err: any) {
     console.log(
       `${getColorCode("error")}[LOG-ERROR] ${moment().format("HH:mm:ss")}`,
-      `Error writing to log.json config file: ${err.message}`,
+      `Error writing to ${logFilePath}: ${err.message}`,
       `${colors["reset"]}`
     );
     throw new Error(`Error writing to ${logFilePath}: ${err.message}`);
@@ -82,7 +78,7 @@ export const log = async (
 };
 
 export const logAll = (
-  title: "info" | "success" | "warn" | "error" | "critical" | string = "info",
+  title: LogStatus = "info",
   persist: boolean,
   ...messages: Array<any>
 ) => {
@@ -92,6 +88,52 @@ export const logAll = (
 export const getLogs = (group: boolean = true, status?: string): object => {
   const logs = fs.readFileSync(logFilePath, "utf8").trim().split(EOL);
 
+  if (logFormat === "json") {
+    const logFileContent = fs.readFileSync(logFilePath, "utf8");
+    const logData = isJSON(logFileContent) ? JSON.parse(logFileContent) : [];
+    if (group) {
+      let groupedData;
+      if (status && status.trim().length > 0) {
+        groupedData = logData.reduce((result: any, entry: any) => {
+          const { level, ...data } = entry;
+          if (level === status) {
+            if (!result[level]) {
+              result[level] = [];
+            }
+            result[level].push(data);
+          }
+          return result;
+        }, {});
+      } else {
+        groupedData = logData.reduce((result: any, entry: any) => {
+          const { level, ...data } = entry;
+          if (!result[level]) {
+            result[level] = [];
+          }
+          result[level].push(data);
+          return result;
+        }, {});
+      }
+      return groupedData;
+    } else {
+      if (status && status.trim().length > 0) {
+        const filteredData = logData.filter(
+          (entry: any) => entry.level === status
+        );
+        return filteredData;
+      }
+      return logData;
+    }
+  }
+
+  return loadLogsForPlainText(logs, group, status);
+};
+
+function loadLogsForPlainText(
+  logs: string[],
+  group: boolean,
+  status: string | undefined
+) {
   const logObj: {
     [key: string]: { message: string; time: string; id: string }[];
   } = {};
@@ -142,17 +184,19 @@ export const getLogs = (group: boolean = true, status?: string): object => {
   });
 
   return group ? logObj : sortedLogs;
-};
+}
 
-function init() {
+async function init() {
   if (fs.existsSync(configFilePath)) {
-    console.log(
-      `${getColorCode("info")}[CONFIG-FILE-LOAD] ${moment().format(
-        "HH:mm:ss"
-      )}`,
-      "Loaded f-log.json config file",
-      `${colors["reset"]}`
-    );
+    if (enableConsole) {
+      console.log(
+        `${getColorCode("info")}[CONFIG-FILE-LOAD] ${moment().format(
+          "HH:mm:ss"
+        )}`,
+        "Loaded f-log.json config file",
+        `${colors["reset"]}`
+      );
+    }
     try {
       const configData = fs.readFileSync(configFilePath, { encoding: "utf8" });
       const config = JSON.parse(configData);
@@ -161,39 +205,23 @@ function init() {
         extension = "log",
         path: folderPath,
         status,
+        format,
       } = config;
 
-      if (status) {
-        const _status = status as Array<StatusType>;
-        for (let index = 0; index < _status.length; index++) {
-          const element = _status[index];
-          let found = false;
-          for (let index = 0; index < defaultStatus.length; index++) {
-            const item = defaultStatus[index];
-            if (element.title === item.title) {
-              found = true;
-              defaultStatus[index].color = element.color;
-            }
-          }
-          if (!found) {
-            defaultStatus.push(element);
-          }
+      enableConsole = config["enable-console"] ?? true;
+
+      getLogFormat(format);
+
+      overrideTheme(status);
+
+      getFilePath(folderPath, filename, extension);
+
+      if (logFormat == "json") {
+        if (!fs.existsSync(logFilePath)) {
+          await fs.promises.appendFile(logFilePath, EOL, {
+            encoding: "utf8",
+          });
         }
-      }
-
-      if (folderPath) {
-        const resolvedFolderPath = path.resolve(process.cwd(), folderPath);
-        if (!fs.existsSync(resolvedFolderPath)) {
-          fs.mkdirSync(resolvedFolderPath, { recursive: true });
-        }
-
-        const endsWithSlash = folderPath.endsWith("/");
-        const logFileName = `${filename}.${extension}`;
-        const logFile = endsWithSlash
-          ? `${folderPath}${logFileName}`
-          : `${folderPath}/${logFileName}`;
-
-        logFilePath = path.resolve(process.cwd(), logFile);
       }
     } catch (err: any) {
       console.log(
@@ -204,6 +232,54 @@ function init() {
         `${colors["reset"]}`
       );
       throw new Error(`Error reading f-log.json config file: ${err.message}`);
+    }
+  }
+}
+
+function getLogFormat(format: any) {
+  if (format) {
+    const acceptedFormats = ["plain", "json"];
+    if (acceptedFormats.includes(format)) {
+      logFormat = format;
+    }
+  }
+}
+
+function getFilePath(folderPath: any, filename: any, extension: any) {
+  if (folderPath) {
+    const resolvedFolderPath = path.resolve(process.cwd(), folderPath);
+    if (!fs.existsSync(resolvedFolderPath)) {
+      fs.mkdirSync(resolvedFolderPath, { recursive: true });
+    }
+    const overrideExtension = logFormat === "json" ? true : false;
+    const endsWithSlash = folderPath.endsWith("/");
+    const logFileName = `${filename}.${
+      overrideExtension ? logFormat : extension
+    }`;
+    const logFile = endsWithSlash
+      ? `${folderPath}${logFileName}`
+      : `${folderPath}/${logFileName}`;
+
+    logFilePath = path.resolve(process.cwd(), logFile);
+  }
+}
+
+function overrideTheme(status: any) {
+  if (status) {
+    const _status = status as Array<StatusType>;
+    for (let index = 0; index < _status.length; index++) {
+      const element = _status[index];
+      let found = false;
+      for (let index = 0; index < defaultStatus.length; index++) {
+        const item = defaultStatus[index];
+        if (element.title === item.title) {
+          found = true;
+          defaultStatus[index].color = element.color;
+        }
+      }
+      if (!found) {
+        defaultStatus.push(element);
+      }
     }
   }
 }
