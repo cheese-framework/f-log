@@ -1,6 +1,6 @@
 {
   "name": "@drantaz/f-log",
-  "version": "1.1.13",
+  "version": "1.1.14",
   "description": "\"F-Log\" is a versatile npm package designed to simplify file logging in your Node.js applications. With F-Log, you can effortlessly incorporate robust logging capabilities into your projects, allowing you to track and record important events, errors, and information to a file.",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
