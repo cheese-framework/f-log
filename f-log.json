@@ -1,9 +1,8 @@
 {
   "$schema": "schemas/f-log.schema.json",
-  "path": "src/dev/logs",
   "filename": "debug-logs",
-  "extension": "log",
-  "status": [{ "title": "debug", "color": "magenta" }],
+  "path": "src/logs/dev",
   "format": "json",
-  "enable-console": false
+  "status": [{ "title": "debug", "color": "magenta" }],
+  "enable-console": true
 }

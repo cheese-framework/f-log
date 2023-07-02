@@ -246,12 +246,12 @@ function getLogFormat(format: any) {
 }
 
 function getFilePath(folderPath: any, filename: any, extension: any) {
+  const overrideExtension = logFormat === "json" ? true : false;
   if (folderPath) {
     const resolvedFolderPath = path.resolve(process.cwd(), folderPath);
     if (!fs.existsSync(resolvedFolderPath)) {
       fs.mkdirSync(resolvedFolderPath, { recursive: true });
     }
-    const overrideExtension = logFormat === "json" ? true : false;
     const endsWithSlash = folderPath.endsWith("/");
     const logFileName = `${filename}.${
       overrideExtension ? logFormat : extension
@@ -261,6 +261,12 @@ function getFilePath(folderPath: any, filename: any, extension: any) {
       : `${folderPath}/${logFileName}`;
 
     logFilePath = path.resolve(process.cwd(), logFile);
+  } else {
+    const logFileName = `${filename}.${
+      overrideExtension ? logFormat : extension
+    }`;
+
+    logFilePath = path.resolve(process.cwd(), logFileName);
   }
 }
 
